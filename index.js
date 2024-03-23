@@ -1,83 +1,49 @@
-const COHORT = "REPLACE_ME!";
-const API_URL = `https://fsa-crud-2aa9294fe819.herokuapp.com/api/${COHORT}/artists`;
+document.addEventListener('DOMContentLoaded', function () {
+  const partyForm = document.getElementById('partyForm');
+  const partyList = document.getElementById('partyList');
 
-const state = {
-  artists: [],
-};
+  // Load parties from local storage on page load
+  let parties = JSON.parse(localStorage.getItem('parties')) || [];
 
-const artistList = document.querySelector("#artists");
-
-const addArtistForm = document.querySelector("#addArtist");
-addArtistForm.addEventListener("submit", addArtist);
-
-/**
- * Sync state with the API and rerender
- */
-async function render() {
-  await getArtists();
-  renderArtists();
-}
-render();
-
-/**
- * Update state with artists from API
- */
-async function getArtists() {
-  // TODO
-  async function getArtists() {
-    try {
-        const response = await fetch(API_URL);
-        if (!response.ok) {
-            throw new Error('Failed to fetch artists');
-        }
-        const data = await response.json();
-        state.artists = data;
-    } catch (error) {
-        console.error('Error fetching artists:', error);
-    }
-}
-
-}
-
-/**
- * Render artists from state
- */
-function renderArtists() {
-  // TODO
-  function renderArtists() {
-    artistList.innerHTML = ''; // Clear the artist list
-    state.artists.forEach(artist => {
-        const li = document.createElement('li');
-        li.textContent = artist.name;
-        artistList.appendChild(li);
+  // Render parties
+  function renderParties() {
+    partyList.innerHTML = '';
+    parties.forEach((party, index) => {
+      const listItem = document.createElement('li');
+      listItem.innerHTML = `
+        <span>${party.name} - ${party.date} ${party.time} at ${party.location}</span>
+        <button data-index="${index}">Delete</button>
+        <p>${party.description}</p>
+      `;
+      partyList.appendChild(listItem);
     });
-}
+  }
 
-}
+  // Render initial parties
+  renderParties();
 
-/**
- * Ask the API to create a new artist based on form data
- * @param {Event} event
- */
-async function addArtist(event) {
-  event.preventDefault();
+  // Add party
+  partyForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const name = partyForm.querySelector('#name').value;
+    const date = partyForm.querySelector('#date').value;
+    const time = partyForm.querySelector('#time').value;
+    const location = partyForm.querySelector('#location').value;
+    const description = partyForm.querySelector('#description').value;
+    const newParty = { name, date, time, location, description };
+    parties.push(newParty);
+    localStorage.setItem('parties', JSON.stringify(parties));
+    renderParties();
+    partyForm.reset();
+  });
 
-  // TODO
-  try {
-    const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name: artistName })
-    });
-    if (!response.ok) {
-        throw new Error('Failed to add artist');
+  // Delete party
+  partyList.addEventListener('click', function (event) {
+    if (event.target.tagName === 'BUTTON') {
+      const index = event.target.dataset.index;
+      parties.splice(index, 1);
+      localStorage.setItem('parties', JSON.stringify(parties));
+      renderParties();
     }
-    // Refresh the artist list after adding the new artist
-    render();
-} catch (error) {
-    console.error('Error adding artist:', error);
-}
-}
-
+  });
+});
