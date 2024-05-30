@@ -64,7 +64,8 @@ async function addEvent(event) {
   const formData = new FormData(addEventForm);
   const name = formData.get('name');
   const description = formData.get('description');
-  const date = formData.get('date');
+  const rawDate = formData.get('date');
+  const date = new Date(rawDate).toISOString(); // Convert date to ISO-8601 format
   const location = formData.get('location');
 
   const newEvent = { name, description, date, location };
