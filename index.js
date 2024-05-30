@@ -97,11 +97,17 @@ eventList.addEventListener('click', async (event) => {
       const response = await fetch(`${API_URL}/${eventId}`, {
         method: 'DELETE',
       });
-      if (!response.ok) {
-        throw new Error('Failed to delete event');
+
+      if (response.ok) {
+        // Remove the deleted event from the state
+        state.events = state.events.filter(event => event.id !== eventId);
+        // Render the updated event list
+        renderEvents();
+      } else {
+        // Log the error details if DELETE request fails
+        const errorData = await response.json();
+        console.error('Failed to delete event:', errorData.error.message);
       }
-      state.events = state.events.filter(event => event.id !== eventId);
-      renderEvents();
     } catch (error) {
       console.error('Error deleting event:', error.message);
     }
