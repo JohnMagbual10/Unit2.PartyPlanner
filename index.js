@@ -34,6 +34,8 @@ function renderEvents() {
   eventList.innerHTML = '';
   state.events.forEach(event => {
     const card = document.createElement('div');
+    card.classList.add('event-card');
+    
     const name = document.createElement('h2');
     const description = document.createElement('p');
     const date = document.createElement('p');
@@ -42,7 +44,7 @@ function renderEvents() {
 
     name.textContent = event.name;
     description.textContent = event.description;
-    date.textContent = event.date;
+    date.textContent = new Date(event.date).toLocaleDateString(); // Format date
     location.textContent = event.location;
     deleteButton.textContent = 'Delete';
     deleteButton.classList.add('delete-btn');
@@ -58,13 +60,43 @@ function renderEvents() {
   });
 }
 
+eventList.addEventListener('click', async (event) => {
+  if (event.target.classList.contains('delete-btn')) {
+    const eventId = event.target.dataset.id;
+    try {
+      const response = await fetch(`${API_URL}/${eventId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove the deleted event from the state
+        state.events = state.events.filter(event => event.id !== eventId);
+        // Render the updated event list
+        renderEvents();
+      } else {
+        // Check if event not found error
+        if (response.status === 404) {
+          console.error('Event not found:', eventId);
+        } else {
+          // Log other error messages
+          const errorData = await response.json();
+          console.error('Failed to delete event:', errorData.error.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error.message);
+    }
+  }
+});
+
 async function addEvent(event) {
   event.preventDefault();
 
   const formData = new FormData(addEventForm);
   const name = formData.get('name');
   const description = formData.get('description');
-  const date = formData.get('date');
+  const rawDate = formData.get('date');
+  const date = new Date(rawDate).toISOString(); // Convert date to ISO-8601 format
   const location = formData.get('location');
 
   const newEvent = { name, description, date, location };
@@ -88,21 +120,3 @@ async function addEvent(event) {
     console.error('Error adding event:', error.message);
   }
 }
-
-eventList.addEventListener('click', async (event) => {
-  if (event.target.classList.contains('delete-btn')) {
-    const eventId = event.target.dataset.id;
-    try {
-      const response = await fetch(`${API_URL}/${eventId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete event');
-      }
-      state.events = state.events.filter(event => event.id !== eventId);
-      renderEvents();
-    } catch (error) {
-      console.error('Error deleting event:', error.message);
-    }
-  }
-});
